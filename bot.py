@@ -2,9 +2,13 @@ import asyncio
 import logging
 
 from aiogram import Bot, Dispatcher
+from aiogram.contrib.fsm_storage.redis import RedisStorage2
+from aiogram.contrib.fsm_storage.memory import MemoryStorage
 
 from config.config import Config, load_config
+from handlers.admin_handlers import register_admin_handlers
 from handlers.user_handlers import register_user_handlers
+from handlers.other_handlers import register_other_handlers
 
 logger = logging.getLogger(__name__)
 
@@ -15,10 +19,15 @@ async def main():
     logger.info("Bot Starting")
     config: Config = load_config()
 
-    bot: Bot = Bot(token=config.token, parse_mode="markdownv2")
-    dp: Dispatcher = Dispatcher(bot)
+    storage:MemoryStorage = MemoryStorage()
 
+    bot: Bot = Bot(token=config.token, parse_mode="markdownv2")
+    dp: Dispatcher = Dispatcher(bot, storage=storage)
+
+    register_admin_handlers(dp, config.admin_id)
     register_user_handlers(dp)
+    register_other_handlers(dp)
+
     await dp.start_polling()
 
 

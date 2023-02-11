@@ -1,0 +1,29 @@
+{
+  "Coffeeshop1": {
+    "city": "City",
+    "address": "1 Street1",
+    "food": true,
+    "latte_price": "400",
+    "file_id": "file_id1",
+    "lat": 55.735,
+    "lon": 37.039
+  },
+  "Coffeeshop2": {
+    "city": "City",
+    "address": "2 Street2",
+    "food": false,
+    "latte_price": "350",
+    "file_id": "file_id2",
+    "lat": 54.999,
+    "lon": 37.235
+  },
+  "Coffeeshop3": {
+    "city": "City",
+    "address": "3 Street3",
+    "food": true,
+    "latte_price": "200",
+    "file_id": "file_id3",
+    "lat": 55.456,
+    "lon": 37.780
+  }
+}
