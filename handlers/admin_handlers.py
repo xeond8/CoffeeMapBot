@@ -7,8 +7,6 @@ from lexicon.lexicon_eng import LEXICON_ENG
 from lexicon.lexicon_ru import LEXICON_RU
 from services.FSM import FSMFillForm
 from services.db_functions import save_to_database
-import requests
-import json
 
 
 async def add_coffeeshop(message: Message):
@@ -41,7 +39,7 @@ async def city_sent(message: Message, state: FSMContext):
 
 async def address_sent(message: Message, state: FSMContext):
     async with state.proxy() as data:
-        data['address'] = message.text
+        data['address'] = message.text.replace('-', '\-').replace('.', '\.')
     lang_code: str = message.from_user.language_code
     if lang_code == 'ru':
         await message.answer(LEXICON_RU['fill_food'], reply_markup=fill_food_keyboard(lang_code))
@@ -94,4 +92,5 @@ def register_admin_handlers(dp: Dispatcher, admin_id: int):
     dp.register_message_handler(address_sent, lambda x: x.from_user.id == admin_id, state=FSMFillForm.fill_address)
     dp.register_callback_query_handler(food_sent, lambda x: x.from_user.id == admin_id, state=FSMFillForm.fill_food)
     dp.register_message_handler(latte_sent, lambda x: x.from_user.id == admin_id, state=FSMFillForm.fill_latte_price)
-    dp.register_message_handler(photo_sent, lambda x: x.from_user.id == admin_id, content_types='photo', state=FSMFillForm.fill_photo)
+    dp.register_message_handler(photo_sent, lambda x: x.from_user.id == admin_id, content_types='photo',
+                                state=FSMFillForm.fill_photo)

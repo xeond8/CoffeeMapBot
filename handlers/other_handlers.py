@@ -1,7 +1,8 @@
-from aiogram.types import Message
 from aiogram import Dispatcher
-from lexicon.lexicon_ru import LEXICON_RU
+from aiogram.types import Message
+
 from lexicon.lexicon_eng import LEXICON_ENG
+from lexicon.lexicon_ru import LEXICON_RU
 
 
 async def other_handler(message: Message):
