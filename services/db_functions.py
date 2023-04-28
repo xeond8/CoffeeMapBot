@@ -5,6 +5,10 @@ from typing import Any
 import requests
 
 
+def update_text(text: str):
+    return text.replace('.', '\.').replace('-', '\-').replace('(', '\(').replace(")", "\)")
+
+
 def geocoder(name: str, city: str, address: str) -> tuple[float, float]:
     req_url: str = 'https://nominatim.openstreetmap.org/search'
     params1: dict[str, Any] = {'city': city, 'street': address, 'format': 'json', 'addressdetails': 1}
@@ -19,33 +23,34 @@ def geocoder(name: str, city: str, address: str) -> tuple[float, float]:
         return 0, 0
 
 
-async def save_to_database(data: dict[str, Any]) -> None:
+async def save_to_database(data: dict[str, Any], user_id: str) -> None:
     with open("services/coffeeshops.json", "r") as file:
         database: dict[str, dict] = json.loads(file.read())
     cafe_name: str = data.pop('name')
     lat, lon = geocoder(cafe_name, data['city'], data['address'])
     data['lat'] = lat
     data['lon'] = lon
-    database[cafe_name] = data
+
+    database[user_id] = database.get(user_id, {})
+    database[user_id][cafe_name] = data
     with open("services/coffeeshops.json", "w") as file:
         json.dump(database, file)
 
 
-def print_entry(entry: tuple[str, float], lg_code: str) -> tuple[str, str]:
+def print_entry(entry: tuple[str, float], lg_code: str, user_id: str) -> tuple[str, str]:
     name, dist = entry[0], str(round(entry[1], 1)).replace('.', '\.')
     with open("services/coffeeshops.json", "r") as file:
         database: dict[str, dict] = json.loads(file.read())
-    cshop: dict[str, Any] = database[name]
+    cshop: dict[str, Any] = database[user_id][name]
+
     if lg_code == 'ru':
-        is_food: str = 'Есть' if cshop['food'] else 'Нет'
-        entry_string: str = f'{dist} км от вас\nНазвание: {name}\nАдрес: {cshop["address"] + ", " + cshop["city"]}\nЕда: {is_food}\nЦена за латте: {cshop["latte_price"]}'
+        entry_string: str = f'{name}\n📍{cshop["address"] + ", " + cshop["city"]}\n{dist} км от вас\n\n{cshop["description"]}\n\nРейтинг: {cshop["rating"]}⭐'
     else:
-        is_food: str = 'Yes' if cshop['food'] else 'No'
-        entry_string: str = f'{dist} km from you\nName: {name}\nAddress: {cshop["address"] + ", " + cshop["city"]}\nFood: {is_food}\nLatte price: {cshop["latte_price"]}'
+        entry_string: str = f'{name}\n📍{cshop["address"] + ", " + cshop["city"]}{dist} km from you\n\n{cshop["description"]}\n\nRating: {cshop["rating"]}⭐'
     return entry_string, cshop['file_id']
 
 
-def count_distance(lat1, lon1, lat2, lon2) -> float:
+def count_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     r: int = 6371
     lat1 = radians(lat1)
     lat2 = radians(lat2)
@@ -54,11 +59,12 @@ def count_distance(lat1, lon1, lat2, lon2) -> float:
     return 2 * r * asin(sqrt(sin((lat2 - lat1) / 2) ** 2 + cos(lat1) * cos(lat2) * sin((lon2 - lon1) / 2) ** 2))
 
 
-async def find_three_nearest(lat1, lon1):
+async def find_three_nearest(lat1: float, lon1: float, user_id: str):
     with open("services/coffeeshops.json", "r") as file:
         database: dict[str, dict] = json.loads(file.read())
     dist_ratio = []
-    for name, cshop in database.items():
+    user_database = database[user_id]
+    for name, cshop in user_database.items():
         lat2, lon2 = cshop['lat'], cshop['lon']
         dist = count_distance(lat1, lon1, lat2, lon2)
         dist_ratio.append(tuple([name, dist]))

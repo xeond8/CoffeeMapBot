@@ -18,17 +18,20 @@ async def send_geolocation(message: Message):
     await message.answer(ans, reply_markup=kb)
 
 
-async def print_three_nearest(message: Message):
+async def print_three_nearest_author(message: Message):
+
     lat_user: float = message.location.latitude
     lon_user: float = message.location.longitude
-    print(lat_user, lon_user, message.from_user.username)
+    print(lat_user, lon_user, message.from_user.username, message.from_user.id)
     lg_code: str = message.from_user.language_code
-    nearest_shops = await find_three_nearest(lat_user, lon_user)
+
+    id_db: str = str(message.from_user.id)
+    nearest_shops = await find_three_nearest(lat_user, lon_user, id_db)
     for shop in nearest_shops:
-        caption, photo_id = print_entry(shop, lg_code)
+        caption, photo_id = print_entry(shop, lg_code, id_db)
         await message.answer_photo(photo_id, caption=caption)
 
 
-def register_user_handlers(dp: Dispatcher):
+def register_geolocation_handlers(dp: Dispatcher):
     dp.register_message_handler(send_geolocation, commands='start')
-    dp.register_message_handler(print_three_nearest, content_types='location')
+    dp.register_message_handler(print_three_nearest_author, content_types='location')

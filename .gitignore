@@ -2,3 +2,5 @@
 .idea/
 *__pycache__
 /services/coffeeshops.json
+/services/update_text.py
+/services/names.py

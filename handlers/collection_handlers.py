@@ -2,11 +2,10 @@ from aiogram import Dispatcher
 from aiogram.dispatcher import FSMContext
 from aiogram.types import Message, CallbackQuery
 
-from keyboards.admin_keyboards import fill_food_keyboard
 from lexicon.lexicon_eng import LEXICON_ENG
 from lexicon.lexicon_ru import LEXICON_RU
 from services.FSM import FSMFillForm
-from services.db_functions import save_to_database
+from services.db_functions import save_to_database, update_text, print_entry
 
 
 async def add_coffeeshop(message: Message):
@@ -19,7 +18,7 @@ async def add_coffeeshop(message: Message):
 
 async def name_sent(message: Message, state: FSMContext):
     async with state.proxy() as data:
-        data['name'] = message.text
+        data['name'] = update_text(message.text)
     if message.from_user.language_code == 'ru':
         await message.answer(LEXICON_RU['fill_city'])
     else:
@@ -29,7 +28,7 @@ async def name_sent(message: Message, state: FSMContext):
 
 async def city_sent(message: Message, state: FSMContext):
     async with state.proxy() as data:
-        data['city'] = message.text
+        data['city'] = update_text(message.text)
     if message.from_user.language_code == 'ru':
         await message.answer(LEXICON_RU['fill_address'])
     else:
@@ -39,32 +38,29 @@ async def city_sent(message: Message, state: FSMContext):
 
 async def address_sent(message: Message, state: FSMContext):
     async with state.proxy() as data:
-        data['address'] = message.text.replace('-', '\-').replace('.', '\.')
+        data['address'] = update_text(message.text)
     lang_code: str = message.from_user.language_code
     if lang_code == 'ru':
-        await message.answer(LEXICON_RU['fill_food'], reply_markup=fill_food_keyboard(lang_code))
+        await message.answer(LEXICON_RU['fill_description'])
     else:
-        await message.answer(LEXICON_ENG['fill_food'], reply_markup=fill_food_keyboard(lang_code))
+        await message.answer(LEXICON_ENG['fill_description'])
 
-    await FSMFillForm.fill_food.set()
+    await FSMFillForm.fill_description.set()
 
 
-async def food_sent(callback: CallbackQuery, state: FSMContext):
+async def description_sent(message: Message, state: FSMContext):
     async with state.proxy() as data:
-        if callback.data == 'yes':
-            data['food'] = True
-        else:
-            data['food'] = False
-    if callback.from_user.language_code == 'ru':
-        await callback.message.answer(LEXICON_RU['fill_latte'])
+        data['description'] = update_text(message.text)
+    if message.from_user.language_code == 'ru':
+        await message.answer(LEXICON_RU['fill_rating'])
     else:
-        await callback.message.answer(LEXICON_ENG['fill_latte'])
-    await FSMFillForm.fill_latte_price.set()
+        await message.answer(LEXICON_ENG['fill_rating'])
+    await FSMFillForm.fill_rating.set()
 
 
-async def latte_sent(message: Message, state: FSMContext):
+async def rating_sent(message: Message, state: FSMContext):
     async with state.proxy() as data:
-        data['latte_price'] = message.text
+        data['rating'] = update_text(message.text)
     if message.from_user.language_code == 'ru':
         await message.answer(LEXICON_RU['fill_photo'])
     else:
@@ -80,17 +76,26 @@ async def photo_sent(message: Message, state: FSMContext):
     else:
         await message.answer(LEXICON_ENG['end_fill'])
 
-    await save_to_database(await state.get_data())
+    await save_to_database(await state.get_data(), str(message.from_user.id))
+
+    await check_success(message, state)
 
     await state.finish()
 
 
-def register_admin_handlers(dp: Dispatcher, admin_id: int):
-    dp.register_message_handler(add_coffeeshop, lambda x: x.from_user.id == admin_id, commands='fillform')
-    dp.register_message_handler(name_sent, lambda x: x.from_user.id == admin_id, state=FSMFillForm.fill_name)
-    dp.register_message_handler(city_sent, lambda x: x.from_user.id == admin_id, state=FSMFillForm.fill_city)
-    dp.register_message_handler(address_sent, lambda x: x.from_user.id == admin_id, state=FSMFillForm.fill_address)
-    dp.register_callback_query_handler(food_sent, lambda x: x.from_user.id == admin_id, state=FSMFillForm.fill_food)
-    dp.register_message_handler(latte_sent, lambda x: x.from_user.id == admin_id, state=FSMFillForm.fill_latte_price)
-    dp.register_message_handler(photo_sent, lambda x: x.from_user.id == admin_id, content_types='photo',
+async def check_success(message: Message, state: FSMContext):
+    async with state.proxy() as data:
+        name = data['name']
+    string, imag = print_entry((name, 0), "ru", message.from_user.id)
+    await message.answer_photo(imag, caption=string)
+
+
+def register_collection_handlers(dp: Dispatcher, admin_id: int):
+    dp.register_message_handler(add_coffeeshop, commands='add')
+    dp.register_message_handler(name_sent, state=FSMFillForm.fill_name)
+    dp.register_message_handler(city_sent, state=FSMFillForm.fill_city)
+    dp.register_message_handler(address_sent, state=FSMFillForm.fill_address)
+    dp.register_message_handler(description_sent, state=FSMFillForm.fill_description)
+    dp.register_message_handler(rating_sent, state=FSMFillForm.fill_rating)
+    dp.register_message_handler(photo_sent, content_types='photo',
                                 state=FSMFillForm.fill_photo)

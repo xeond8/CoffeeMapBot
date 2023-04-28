@@ -5,6 +5,6 @@ class FSMFillForm(StatesGroup):
     fill_name = State()
     fill_city = State()
     fill_address = State()
-    fill_food = State()
-    fill_latte_price = State()
+    fill_description = State()
+    fill_rating = State()
     fill_photo = State()
