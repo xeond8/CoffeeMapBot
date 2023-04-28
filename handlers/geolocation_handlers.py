@@ -6,6 +6,7 @@ from keyboards.user_keyboards import send_geolocation_keyboard
 from lexicon.lexicon_eng import LEXICON_ENG
 from lexicon.lexicon_ru import LEXICON_RU
 from services.db_functions import print_entry, find_three_nearest
+from config.config import Config, load_config
 
 
 async def send_geolocation(message: Message):
@@ -20,15 +21,15 @@ async def send_geolocation(message: Message):
 
 async def print_three_nearest_author(message: Message):
 
+    config: Config = load_config()
+
     lat_user: float = message.location.latitude
     lon_user: float = message.location.longitude
-    print(lat_user, lon_user, message.from_user.username, message.from_user.id)
     lg_code: str = message.from_user.language_code
 
-    id_db: str = str(message.from_user.id)
-    nearest_shops = await find_three_nearest(lat_user, lon_user, id_db)
+    nearest_shops = await find_three_nearest(lat_user, lon_user, message.from_user.id)
     for shop in nearest_shops:
-        caption, photo_id = print_entry(shop, lg_code, id_db)
+        caption, photo_id = print_entry(shop, lg_code, str(config.admin_id))
         await message.answer_photo(photo_id, caption=caption)
 
 
