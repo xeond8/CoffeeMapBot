@@ -27,9 +27,10 @@ async def print_three_nearest_author(message: Message):
     lon_user: float = message.location.longitude
     lg_code: str = message.from_user.language_code
 
-    nearest_shops = await find_three_nearest(lat_user, lon_user, message.from_user.id)
+    id_db = str(config.admin_id)
+    nearest_shops = await find_three_nearest(lat_user, lon_user, id_db)
     for shop in nearest_shops:
-        caption, photo_id = print_entry(shop, lg_code, str(config.admin_id))
+        caption, photo_id = print_entry(shop, lg_code, id_db)
         await message.answer_photo(photo_id, caption=caption)
 
 
