@@ -9,7 +9,7 @@ class Config:
     admin_id: int
 
 
-def load_config(path) -> Config:
+def load_config(path=None) -> Config:
     env: Env = Env()
     env.read_env(path)
     return Config(token=env("BOT_TOKEN"), admin_id=int(env("ADMIN_ID")))
