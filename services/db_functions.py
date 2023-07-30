@@ -67,5 +67,5 @@ async def find_three_nearest(lat1: float, lon1: float, user_id: str):
     for name, cshop in user_database.items():
         lat2, lon2 = cshop['lat'], cshop['lon']
         dist = count_distance(lat1, lon1, lat2, lon2)
-        dist_ratio.append(tuple)
+        dist_ratio.append(tuple([name, dist]))
     return sorted(dist_ratio, key=lambda x: x[1])[:3]
