@@ -9,7 +9,7 @@ def update_text(text: str):
     return text.replace('.', '\.').replace('-', '\-').replace('(', '\(').replace(")", "\)")
 
 
-def geocoder(name: str, city: str, address: str) -> tuple[float, float]:
+def geocoder(name: str, city: str, address: str) -> tuple:
     req_url: str = 'https://nominatim.openstreetmap.org/search'
     params1: dict[str, Any] = {'city': city, 'street': address, 'format': 'json', 'addressdetails': 1}
     params2: dict[str, Any] = {'city': city, 'street': name, 'format': 'json', 'addressdetails': 1}
